@@ -1,4 +1,6 @@
 # Octopus
+# IMDB_CSFD_profit_movies
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -53,7 +55,7 @@ test=profitMetaData.nlargest(20,'profit')[['rating_imdb','rating_csfd','profit']
 test[['rating_imdb','rating_csfd']].plot.scatter(x='rating_csfd', y='rating_imdb',s=test['profit']/10000000)
 plt.show()
 
-
+#Soubor %zisku a poctu filmu
 smallProfit=profitMetaData[['id','%profit']]
 
 smallProfit
