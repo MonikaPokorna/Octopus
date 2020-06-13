@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from pandas.plotting import scatter_matrix 
 
-
 #Nacteni MetaData
 metadata = pd.read_csv('c:/Home/Monika/DA/Python/movies_metadata_2020-05-20.csv', sep='|', encoding='utf-8')
 
