@@ -1,0 +1,158 @@
+# Octopus
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from pandas.plotting import scatter_matrix 
+#Nacteni MetaData
+metadata = pd.read_csv('c:/Home/Monika/DA/Python/movies_metadata_2020-05-20.csv', sep='|', encoding='utf-8')
+metadata.columns
+Index(['id', 'id_movie', 'imdb_id', 'csfd_id', 'original_title', 'title',
+       'title_csfd', 'adult', 'belongs_to_collection', 'genres', 'homepage',
+       'original_language', 'overview', 'poster_path', 'production_companies',
+       'distributor', 'production_countries', 'release_date', 'runtime',
+       'spoken_languages', 'status', 'tagline', 'video', 'rating_tmdb',
+       'rating_csfd', 'rating_imdb', 'vote_count_tmdb', 'vote_count_csfd',
+       'vote_count_imdb', 'popularity_tmdb', 'fans_count_csfd', 'budget_tmdb',
+       'budget_mojo', 'revenue_tmdb', 'revenue_world', 'revenue_domestic',
+       'revenue_intern', 'revenue_open'],
+      dtype='object')
+#Nacteni dat, pokud je fce .copy() tak se data stabilizuji
+smallMetaData =metadata[['id','title_csfd','rating_csfd','rating_imdb','budget_mojo','revenue_world']].copy()
+smallMetaData
+id	title_csfd	rating_csfd	rating_imdb	budget_mojo	revenue_world
+0	862	Toy Story: Příběh hraček	8.5	8.3	NaN	404265438.0
+1	8844	Jumanji	7.3	7.0	65000000.0	262821940.0
+2	15602	Dej si pohov, kámoši 2	7.4	6.7	NaN	71518503.0
+3	31357	Až si vydechnu	4.3	5.9	NaN	81452156.0
+4	11862	Hlava rodiny 2 - Tatínek nebo dědeček?	5.8	6.0	NaN	76594107.0
+...	...	...	...	...	...	...
+45428	439050	NaN	NaN	6.1	NaN	NaN
+45429	111109	Siglo ng pagluluwal	NaN	7.1	NaN	NaN
+45430	67758	Betrayal	3.6	4.3	NaN	NaN
+45431	227506	Plesající satan	5.9	6.9	NaN	NaN
+45432	461257	Queerama	NaN	6.4	NaN	2672.0
+45433 rows × 6 columns
+
+#Vypocet profitu
+smallMetaData['profit']=smallMetaData['revenue_world']-smallMetaData['budget_mojo']
+smallMetaData['%profit']=round(((smallMetaData['profit']/smallMetaData['revenue_world'])*100),0)
+smallMetaData
+id	title_csfd	rating_csfd	rating_imdb	budget_mojo	revenue_world	profit	%profit
+0	862	Toy Story: Příběh hraček	8.5	8.3	NaN	404265438.0	NaN	NaN
+1	8844	Jumanji	7.3	7.0	65000000.0	262821940.0	197821940.0	75.0
+2	15602	Dej si pohov, kámoši 2	7.4	6.7	NaN	71518503.0	NaN	NaN
+3	31357	Až si vydechnu	4.3	5.9	NaN	81452156.0	NaN	NaN
+4	11862	Hlava rodiny 2 - Tatínek nebo dědeček?	5.8	6.0	NaN	76594107.0	NaN	NaN
+...	...	...	...	...	...	...	...	...
+45428	439050	NaN	NaN	6.1	NaN	NaN	NaN	NaN
+45429	111109	Siglo ng pagluluwal	NaN	7.1	NaN	NaN	NaN	NaN
+45430	67758	Betrayal	3.6	4.3	NaN	NaN	NaN	NaN
+45431	227506	Plesající satan	5.9	6.9	NaN	NaN	NaN	NaN
+45432	461257	Queerama	NaN	6.4	NaN	2672.0	NaN	NaN
+45433 rows × 8 columns
+
+#Vybiram jen filmy, ktere maji budget i revenue, pro hodnoty profit, coz je zaklad moji analyzy
+profitMetaData=smallMetaData[smallMetaData['profit'].notnull()]
+profitMetaData=profitMetaData.sort_values('profit', ascending=False)
+profitMetaData
+id	title_csfd	rating_csfd	rating_imdb	budget_mojo	revenue_world	profit	%profit
+14546	19995	Avatar	8.2	7.8	237000000.0	2.790439e+09	2.553439e+09	92.0
+1638	597	Titanic	8.5	7.8	200000000.0	2.194440e+09	1.994440e+09	91.0
+26537	140607	Star Wars: Síla se probouzí	7.6	7.9	245000000.0	2.068224e+09	1.823224e+09	88.0
+25066	135397	Jurský svět	7.3	7.0	150000000.0	1.670401e+09	1.520401e+09	91.0
+28811	168259	Rychle a zběsile 7	6.8	7.2	190000000.0	1.515048e+09	1.325048e+09	87.0
+...	...	...	...	...	...	...	...	...
+7225	10733	Pevnost Alamo	6.2	6.0	107000000.0	2.581996e+07	-8.118004e+07	-314.0
+14	1408	Ostrov hrdlořezů	5.5	5.7	98000000.0	1.001732e+07	-8.798268e+07	-878.0
+5388	11692	Pluto Nash	3.9	3.8	100000000.0	7.103973e+06	-9.289603e+07	-1308.0
+2710	1911	Vikingové	6.6	6.6	160000000.0	6.169890e+07	-9.830110e+07	-159.0
+16780	50321	Máma mezi Marťany	5.4	5.4	150000000.0	3.923368e+07	-1.107663e+08	-282.0
+3093 rows × 8 columns
+
+#Negativni body se predefinuji a budou mit pak ve vykazu jinou barvu
+def negativ(value):
+    if value>=0:
+        return 1
+    else:
+        return 0
+    
+profitMetaData['gain_loss']=profitMetaData['profit'].apply(negativ)
+profitMetaData
+id	title_csfd	rating_csfd	rating_imdb	budget_mojo	revenue_world	profit	%profit	gain_loss
+14546	19995	Avatar	8.2	7.8	237000000.0	2.790439e+09	2.553439e+09	92.0	1
+1638	597	Titanic	8.5	7.8	200000000.0	2.194440e+09	1.994440e+09	91.0	1
+26537	140607	Star Wars: Síla se probouzí	7.6	7.9	245000000.0	2.068224e+09	1.823224e+09	88.0	1
+25066	135397	Jurský svět	7.3	7.0	150000000.0	1.670401e+09	1.520401e+09	91.0	1
+28811	168259	Rychle a zběsile 7	6.8	7.2	190000000.0	1.515048e+09	1.325048e+09	87.0	1
+...	...	...	...	...	...	...	...	...	...
+7225	10733	Pevnost Alamo	6.2	6.0	107000000.0	2.581996e+07	-8.118004e+07	-314.0	0
+14	1408	Ostrov hrdlořezů	5.5	5.7	98000000.0	1.001732e+07	-8.798268e+07	-878.0	0
+5388	11692	Pluto Nash	3.9	3.8	100000000.0	7.103973e+06	-9.289603e+07	-1308.0	0
+2710	1911	Vikingové	6.6	6.6	160000000.0	6.169890e+07	-9.830110e+07	-159.0	0
+16780	50321	Máma mezi Marťany	5.4	5.4	150000000.0	3.923368e+07	-1.107663e+08	-282.0	0
+3093 rows × 9 columns
+
+#Rating_IMDB
+profitMetaData[['rating_imdb','profit','gain_loss']].plot.scatter(x='rating_imdb', y='profit',c='gain_loss',cmap=cm.get_cmap('coolwarm_r',2))
+plt.show()
+
+#Rating_CSFD
+profitMetaData[['rating_csfd','profit','gain_loss']].plot.scatter(x='rating_csfd', y='profit',c='gain_loss',cmap=cm.get_cmap('coolwarm_r',2))
+plt.show()
+
+#Test 20 nejziskovějších na hodnocení
+test=profitMetaData.nlargest(20,'profit')[['rating_imdb','rating_csfd','profit']]
+
+test[['rating_imdb','rating_csfd']].plot.scatter(x='rating_csfd', y='rating_imdb',s=test['profit']/10000000)
+plt.show()
+
+smallProfit=profitMetaData[['id','%profit']]
+smallProfit
+id	%profit
+14546	19995	92.0
+1638	597	91.0
+26537	140607	88.0
+25066	135397	91.0
+28811	168259	87.0
+...	...	...
+7225	10733	-314.0
+14	1408	-878.0
+5388	11692	-1308.0
+2710	1911	-159.0
+16780	50321	-282.0
+3093 rows × 2 columns
+
+smallProfitC=smallProfit.groupby('%profit')
+smallProfitC=smallProfitC[['id']].count()
+smallProfitC=smallProfitC.rename(columns={'id':'idMovieCount'})
+smallProfitC
+idMovieCount
+%profit	
+-6666567.0	1
+-1353691.0	1
+-368286.0	1
+-186554.0	1
+-167498.0	1
+...	...
+96.0	22
+97.0	20
+98.0	15
+99.0	17
+100.0	6
+581 rows × 1 columns
+
+#Koeficient korelace vypocet pro jednotlive sloupce
+corr=profitMetaData.corr()
+#Vysledek, neexistuje linearni korelace mezi hodnocenim filmu a profitem
+corr
+id	rating_csfd	rating_imdb	budget_mojo	revenue_world	profit	%profit	gain_loss
+id	1.000000	-0.052521	-0.025727	0.028879	0.080194	0.086045	0.004746	0.119157
+rating_csfd	-0.052521	1.000000	0.888897	0.108670	0.268864	0.285255	0.039830	0.226466
+rating_imdb	-0.025727	0.888897	1.000000	0.069349	0.254495	0.278920	0.046635	0.228937
+budget_mojo	0.028879	0.108670	0.069349	1.000000	0.704619	0.560025	0.021122	0.188060
+revenue_world	0.080194	0.268864	0.254495	0.704619	1.000000	0.982479	0.017268	0.357430
+profit	0.086045	0.285255	0.278920	0.560025	0.982479	1.000000	0.014614	0.367923
+%profit	0.004746	0.039830	0.046635	0.021122	0.017268	0.014614	1.000000	0.042191
+gain_loss	0.119157	0.226466	0.228937	0.188060	0.357430	0.367923	0.042191	1.000000
